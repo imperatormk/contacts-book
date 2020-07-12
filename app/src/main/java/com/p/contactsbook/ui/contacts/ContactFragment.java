@@ -17,9 +17,9 @@ import android.view.ViewGroup;
 
 import com.p.contactsbook.R;
 import com.p.contactsbook.entities.ContactViewModel;
-import com.p.contactsbook.services.Firestore;
+import com.p.contactsbook.services.ContactsFirestore;
 import com.p.contactsbook.entities.Contact;
-import com.p.contactsbook.services.LocalDatabase;
+import com.p.contactsbook.services.ContactsLocalDatabase;
 import com.p.contactsbook.ui.main.MainFragment;
 
 import java.util.ArrayList;
@@ -49,8 +49,6 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
-
-        initDb(true);
     }
 
     public void initDb(boolean _isLocal) {
@@ -93,7 +91,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
         };
 
         if (isLocal) {
-            final LocalDatabase dbInstance = LocalDatabase.getInstance(getActivity().getApplicationContext(), cb);
+            final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance(getActivity().getApplicationContext(), cb);
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -101,7 +99,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                 }
             });
         } else {
-            Firestore.initContacts(cb);
+            ContactsFirestore.initContacts(cb);
         }
     }
 
@@ -127,7 +125,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
     public void upsertContact(final Contact c) {
         if (c.getId().equals("")) {
             if (isLocal) {
-                final LocalDatabase dbInstance = LocalDatabase.getInstance();
+                final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
                 AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -135,11 +133,11 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                     }
                 });
             } else {
-                Firestore.addContact(c);
+                ContactsFirestore.addContact(c);
             }
         } else {
             if (isLocal) {
-                final LocalDatabase dbInstance = LocalDatabase.getInstance();
+                final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
                 AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -147,7 +145,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                     }
                 });
             } else {
-                Firestore.modifyContact(c);
+                ContactsFirestore.modifyContact(c);
             }
         }
     }
@@ -176,12 +174,12 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    LocalDatabase dbInstance = LocalDatabase.getInstance();
+                    ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
                     dbInstance.deleteContact(contact);
                 }
             });
         } else {
-            Firestore.deleteContact(contact);
+            ContactsFirestore.deleteContact(contact);
         }
     }
 }

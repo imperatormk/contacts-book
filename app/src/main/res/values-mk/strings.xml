@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">ContactsBook</string>
+    <string name="location">Локација</string>
+    <string name="submit">Поднеси</string>
+    <string name="name">Име</string>
+    <string name="number">Број</string>
+    <string name="new_contact">Нов контакт</string>
+    <string name="add_contact">Додај контакт</string>
+    <string name="signin">Најави се</string>
+    <string name="signout">Одјави се</string>
+    <string name="greeting">Добредојде %1$s</string>
+</resources>

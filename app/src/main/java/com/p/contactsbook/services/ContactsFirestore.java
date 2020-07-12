@@ -15,7 +15,7 @@ import com.p.contactsbook.entities.ContactViewModel;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Firestore {
+public class ContactsFirestore {
     private static FirebaseFirestore getInstance(){
         return FirebaseFirestore.getInstance();
     };

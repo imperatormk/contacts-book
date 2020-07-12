@@ -17,23 +17,23 @@ abstract class RoomDb extends RoomDatabase {
     public abstract ContactDao contactDao();
 }
 
-public class LocalDatabase {
-    private static LocalDatabase INSTANCE = null;
+public class ContactsLocalDatabase {
+    private static ContactsLocalDatabase  INSTANCE = null;
     private RoomDb db;
     private ContactViewModel.ContactListCallback cb;
 
-    private LocalDatabase(Context ctx, ContactViewModel.ContactListCallback cb) {
+    private ContactsLocalDatabase (Context ctx, ContactViewModel.ContactListCallback cb) {
         this.db = Room.databaseBuilder(ctx, RoomDb.class, "contacts-book").build();
         this.cb = cb;
     }
 
-    public static LocalDatabase getInstance() {
+    public static ContactsLocalDatabase getInstance() {
         return INSTANCE;
     }
 
-    public static LocalDatabase getInstance(Context ctx, ContactViewModel.ContactListCallback cb) {
+    public static ContactsLocalDatabase getInstance(Context ctx, ContactViewModel.ContactListCallback cb) {
         if (INSTANCE == null) {
-            INSTANCE = new LocalDatabase(ctx, cb);
+            INSTANCE = new ContactsLocalDatabase(ctx, cb);
         }
         return INSTANCE;
     }

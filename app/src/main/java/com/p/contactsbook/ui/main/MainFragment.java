@@ -15,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -23,8 +22,10 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.p.contactsbook.MainActivity;
 import com.p.contactsbook.R;
 import com.p.contactsbook.entities.Contact;
+import com.p.contactsbook.services.Auth;
 import com.p.contactsbook.ui.contacts.ManageContactActivity;
 import com.p.contactsbook.ui.contacts.ContactFragment;
 
@@ -37,7 +38,8 @@ public class MainFragment extends Fragment {
     private int RC_SIGN_IN = 777;
     private int RC_CREATE_CONTACT = 778;
 
-    private MainViewModel mViewModel;
+    private Auth mAuth;
+    private Switch swLocal;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -49,10 +51,12 @@ public class MainFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_fragment, container, false);
 
+        mAuth = new Auth(this);
+
         Button btnSignIn = view.findViewById(R.id.btnSignIn);
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (mViewModel.isLoggedIn()) {
+                if (mAuth.getAuthViewModel().isLoggedIn()) {
                     signOut();
                 } else {
                     signIn();
@@ -63,14 +67,21 @@ public class MainFragment extends Fragment {
         Button btnAddContact = view.findViewById(R.id.btnAddContact);
         btnAddContact.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                launchManageContact(new Contact("", "AAA", "BBB", "CCC"));
+                launchManageContact(new Contact("", "", "", ""));
             }
         });
 
-        Switch swLocal = view.findViewById(R.id.swLocal);
+        swLocal = view.findViewById(R.id.swLocal);
         swLocal.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 ((ContactFragment) getChildFragmentManager().findFragmentById(R.id.contacts)).initDb(isChecked);
+            }
+        });
+
+        Button btnLanguage = view.findViewById(R.id.btnLanguage);
+        btnLanguage.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).updateResourcesLegacy(getActivity(), "mk", "MK");
             }
         });
 
@@ -87,20 +98,21 @@ public class MainFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-        mViewModel.getUser().observe(requireActivity(), new Observer<FirebaseUser>() {
+        mAuth.getAuthViewModel().getUser().observe(requireActivity(), new Observer<FirebaseUser>() {
             @Override
             public void onChanged(@Nullable FirebaseUser user) {
                 TextView txtWelcome = getView().findViewById(R.id.txtWelcome);
                 Button btnLogin = getView().findViewById(R.id.btnSignIn);
 
                 if (user == null) {
-                    txtWelcome.setText("Welcome");
-                    btnLogin.setText("Sign in");
+                    txtWelcome.setText(getResources().getString(R.string.greeting, ""));
+                    btnLogin.setText(R.string.signin);
                 } else {
-                    txtWelcome.setText("Welcome " + user.getDisplayName());
-                    btnLogin.setText("Sign out");
+                    txtWelcome.setText(getResources().getString(R.string.greeting, user.getDisplayName()));
+                    btnLogin.setText(R.string.signout);
                 }
+
+                swLocal.setChecked(user == null);
             }
         });
     }
@@ -114,11 +126,22 @@ public class MainFragment extends Fragment {
 
             if (resultCode == RESULT_OK) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                mViewModel.setUser(user);
+                mAuth.getAuthViewModel().setUser(user);
+
+                boolean isNew = response.isNewUser();
+                if (isNew) {
+                    // TODO: create new document for user
+                    // TODO: transfer local data to cloud
+                } else {
+                    // TODO: purge local db?
+                }
+                swLocal.setChecked(false);
             } else {
                 System.out.println(response.getError().getMessage());
             }
         } else if (requestCode == RC_CREATE_CONTACT) {
+            if (data == null) return;
+
             Contact c = (Contact) data.getSerializableExtra("contact");
             if (c == null) return;
 
@@ -128,21 +151,21 @@ public class MainFragment extends Fragment {
 
     private void signIn() {
         List<AuthUI.IdpConfig> providers = Arrays.asList(
-                new AuthUI.IdpConfig.EmailBuilder().build(),
-                //new AuthUI.IdpConfig.GoogleBuilder().build(),
-                //new AuthUI.IdpConfig.FacebookBuilder().build(),
-                new AuthUI.IdpConfig.AnonymousBuilder().build());
+            new AuthUI.IdpConfig.EmailBuilder().build(),
+            //new AuthUI.IdpConfig.GoogleBuilder().build(),
+            //new AuthUI.IdpConfig.FacebookBuilder().build(),
+            new AuthUI.IdpConfig.AnonymousBuilder().build());
 
         startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .build(),
-                RC_SIGN_IN);
+            AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setAvailableProviders(providers)
+                .build(),
+            RC_SIGN_IN);
     }
 
     private void signOut() {
         FirebaseAuth.getInstance().signOut();
-        mViewModel.setUser(null);
+        mAuth.getAuthViewModel().setUser(null);
     }
 }
