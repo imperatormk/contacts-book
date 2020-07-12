@@ -17,11 +17,11 @@ import java.util.List;
 
 public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContactRecyclerViewAdapter.ViewHolder> {
 
-    private final List<Contact> mValues;
+    private final List<Contact> mContacts;
     private final OnListFragmentInteractionListener mListener;
 
     MyContactRecyclerViewAdapter(List<Contact> items, OnListFragmentInteractionListener listener) {
-        mValues = items;
+        mContacts = items;
         mListener = listener;
     }
 
@@ -35,7 +35,7 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        Contact contact = mValues.get(position);
+        Contact contact = mContacts.get(position);
 
         holder.mItem = contact;
         holder.mNameView.setText(contact.getName());
@@ -60,28 +60,33 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
             }
         });
     }
+    
+    void clearContacts() {
+        mContacts.clear();
+        notifyDataSetChanged();
+    }
 
     void addContact(Contact c) {
-        mValues.add(c);
-        int position = mValues.indexOf(c);
+        mContacts.add(c);
+        int position = mContacts.indexOf(c);
         notifyItemInserted(position);
     }
 
     void modifyContact(Contact c) {
-        int position = mValues.indexOf(c);
-        mValues.set(mValues.indexOf(c), c);
+        int position = mContacts.indexOf(c);
+        mContacts.set(mContacts.indexOf(c), c);
         notifyItemChanged(position);
     }
 
     void deleteContact(Contact c) {
-        int position = mValues.indexOf(c);
-        mValues.remove(c);
+        int position = mContacts.indexOf(c);
+        mContacts.remove(c);
         notifyItemRemoved(position);
     }
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        return mContacts.size();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

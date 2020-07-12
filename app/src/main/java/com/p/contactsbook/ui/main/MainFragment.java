@@ -14,6 +14,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.firebase.ui.auth.AuthUI;
@@ -22,8 +25,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.p.contactsbook.R;
 import com.p.contactsbook.entities.Contact;
-import com.p.contactsbook.services.Firestore;
-import com.p.contactsbook.ui.contacts.AddContactActivity;
+import com.p.contactsbook.ui.contacts.ManageContactActivity;
+import com.p.contactsbook.ui.contacts.ContactFragment;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,15 +63,22 @@ public class MainFragment extends Fragment {
         Button btnAddContact = view.findViewById(R.id.btnAddContact);
         btnAddContact.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                upsertContact(new Contact(null, "AAA", "BBB", "CCC"));
+                launchManageContact(new Contact("", "AAA", "BBB", "CCC"));
+            }
+        });
+
+        Switch swLocal = view.findViewById(R.id.swLocal);
+        swLocal.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                ((ContactFragment) getChildFragmentManager().findFragmentById(R.id.contacts)).initDb(isChecked);
             }
         });
 
         return view;
     }
 
-    public void upsertContact(Contact contact) {
-        Intent intent = new Intent(getActivity(), AddContactActivity.class);
+    public void launchManageContact(Contact contact) {
+        Intent intent = new Intent(getActivity(), ManageContactActivity.class);
         intent.putExtra("contact", contact);
         startActivityForResult(intent, RC_CREATE_CONTACT);
     }
@@ -112,11 +122,7 @@ public class MainFragment extends Fragment {
             Contact c = (Contact) data.getSerializableExtra("contact");
             if (c == null) return;
 
-            if (c.getId() == null) {
-                Firestore.addContact(c);
-            } else {
-                Firestore.modifyContact(c);
-            }
+            ((ContactFragment) getChildFragmentManager().findFragmentById(R.id.contacts)).upsertContact(c);
         }
     }
 

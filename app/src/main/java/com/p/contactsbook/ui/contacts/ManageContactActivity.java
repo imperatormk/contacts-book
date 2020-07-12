@@ -13,7 +13,7 @@ import com.p.contactsbook.databinding.ActivityAddContactBinding;
 import com.p.contactsbook.entities.Contact;
 import com.p.contactsbook.entities.ContactViewModel;
 
-public class AddContactActivity extends AppCompatActivity implements View.OnClickListener {
+public class ManageContactActivity extends AppCompatActivity implements View.OnClickListener {
     private ContactViewModel contactVm;
 
     @Override

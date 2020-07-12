@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,14 +20,12 @@ import com.p.contactsbook.entities.ContactViewModel;
 import com.p.contactsbook.services.Firestore;
 import com.p.contactsbook.entities.Contact;
 import com.p.contactsbook.services.LocalDatabase;
-import com.p.contactsbook.services.RoomDb;
 import com.p.contactsbook.ui.main.MainFragment;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ContactFragment extends Fragment implements OnListFragmentInteractionListener {
-    private boolean isLocal = true;
+    private boolean isLocal = false;
 
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
@@ -50,33 +50,58 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
 
+        initDb(true);
+    }
+
+    public void initDb(boolean _isLocal) {
+        isLocal = _isLocal;
+        recycler.clearContacts();
+
+        final ContactViewModel.ContactListCallback cb = new ContactViewModel.ContactListCallback() {
+            @Override
+            public void contactAdded(final Contact contact) {
+                Handler refresh = new Handler(Looper.getMainLooper());
+                refresh.post(new Runnable() {
+                    public void run()
+                    {
+                        recycler.addContact(contact);
+                    }
+                });
+            }
+
+            @Override
+            public void contactDeleted(final Contact contact) {
+                Handler refresh = new Handler(Looper.getMainLooper());
+                refresh.post(new Runnable() {
+                    public void run()
+                    {
+                        recycler.deleteContact(contact);
+                    }
+                });
+            }
+
+            @Override
+            public void contactModified(final Contact contact) {
+                Handler refresh = new Handler(Looper.getMainLooper());
+                refresh.post(new Runnable() {
+                    public void run()
+                    {
+                        recycler.modifyContact(contact);
+                    }
+                });
+            }
+        };
+
         if (isLocal) {
+            final LocalDatabase dbInstance = LocalDatabase.getInstance(getActivity().getApplicationContext(), cb);
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    RoomDb dbInstance = LocalDatabase.getInstance(getActivity().getApplicationContext());
-                    List<Contact> contacts = dbInstance.contactDao().getAll();
-
-                    System.out.println(contacts.size());
+                    dbInstance.initContacts();
                 }
             });
         } else {
-            Firestore.readContacts(new ContactViewModel.ContactListCallback() {
-                @Override
-                public void contactAdded(Contact contact) {
-                    recycler.addContact(contact);
-                }
-
-                @Override
-                public void contactDeleted(Contact contact) {
-                    recycler.deleteContact(contact);
-                }
-
-                @Override
-                public void contactModified(Contact contact) {
-                    recycler.modifyContact(contact);
-                }
-            });
+            Firestore.initContacts(cb);
         }
     }
 
@@ -99,6 +124,34 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
         return view;
     }
 
+    public void upsertContact(final Contact c) {
+        if (c.getId().equals("")) {
+            if (isLocal) {
+                final LocalDatabase dbInstance = LocalDatabase.getInstance();
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dbInstance.addContact(c);
+                    }
+                });
+            } else {
+                Firestore.addContact(c);
+            }
+        } else {
+            if (isLocal) {
+                final LocalDatabase dbInstance = LocalDatabase.getInstance();
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dbInstance.modifyContact(c);
+                    }
+                });
+            } else {
+                Firestore.modifyContact(c);
+            }
+        }
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -114,12 +167,22 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
     @Override
     public void onContactEdit(Contact contact) {
         MainFragment mainFragment = ((MainFragment) this.getParentFragment());
-        mainFragment.upsertContact(contact);
+        mainFragment.launchManageContact(contact);
     }
 
     @Override
-    public void onContactDelete(Contact contact) {
-        Firestore.deleteContact(contact);
+    public void onContactDelete(final Contact contact) {
+        if (isLocal) {
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    LocalDatabase dbInstance = LocalDatabase.getInstance();
+                    dbInstance.deleteContact(contact);
+                }
+            });
+        } else {
+            Firestore.deleteContact(contact);
+        }
     }
 }
 

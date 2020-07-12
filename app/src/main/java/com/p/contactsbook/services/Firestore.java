@@ -16,12 +16,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Firestore {
-    private static FirebaseFirestore getDb(){
+    private static FirebaseFirestore getInstance(){
         return FirebaseFirestore.getInstance();
     };
 
-    public static void readContacts(final ContactViewModel.ContactListCallback cb) {
-        getDb().collection("contacts")
+    public static void initContacts(final ContactViewModel.ContactListCallback cb) {
+        getInstance().collection("contacts")
             .addSnapshotListener(new EventListener<QuerySnapshot>() {
                 @Override
                 public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
@@ -57,17 +57,17 @@ public class Firestore {
         contactMap.put("number", contact.getNumber());
         contactMap.put("location", contact.getLocation());
 
-        getDb().collection("contacts")
+        getInstance().collection("contacts")
             .add(contactMap);
     }
 
     public static void modifyContact(final Contact contact) {
-        getDb().collection("contacts").document(contact.getId())
+        getInstance().collection("contacts").document(contact.getId())
             .set(contact);
     }
 
     public static void deleteContact(final Contact contact) {
-        getDb().collection("contacts").document(contact.getId())
+        getInstance().collection("contacts").document(contact.getId())
             .delete();
     }
 }

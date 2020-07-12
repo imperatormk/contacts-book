@@ -3,7 +3,6 @@ package com.p.contactsbook.entities;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import java.io.Serializable;
@@ -44,7 +43,8 @@ public class Contact implements Serializable {
 
     @PrimaryKey
     @NonNull
-    private String id;
+    @ColumnInfo(name = "id")
+    private String id = "";
 
     @ColumnInfo(name = "name")
     private String name;
@@ -58,8 +58,7 @@ public class Contact implements Serializable {
     public Contact() {
     }
 
-    @Ignore
-    public Contact(String id, String name, String number, String location) {
+    public Contact(@NonNull String id, String name, String number, String location) {
         this.id = id;
         this.name = name;
         this.number = number;
