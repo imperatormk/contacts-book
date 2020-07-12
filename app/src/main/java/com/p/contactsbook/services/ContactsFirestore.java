@@ -2,7 +2,9 @@ package com.p.contactsbook.services;
 
 import androidx.annotation.Nullable;
 
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -20,8 +22,8 @@ public class ContactsFirestore {
         return FirebaseFirestore.getInstance();
     };
 
-    public static void initContacts(final ContactViewModel.ContactListCallback cb) {
-        getInstance().collection("contacts")
+    public static void initContacts(String userId, final ContactViewModel.ContactListCallback cb) {
+        getUserContactsCollection(userId)
             .addSnapshotListener(new EventListener<QuerySnapshot>() {
                 @Override
                 public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
@@ -51,23 +53,34 @@ public class ContactsFirestore {
             });
     }
 
-    public static void addContact(final Contact contact) {
+    public static void addContact(String userId, final Contact contact) {
         Map<String, Object> contactMap = new HashMap<>();
         contactMap.put("name", contact.getName());
         contactMap.put("number", contact.getNumber());
         contactMap.put("location", contact.getLocation());
 
-        getInstance().collection("contacts")
+        getUserContactsCollection(userId)
             .add(contactMap);
     }
 
-    public static void modifyContact(final Contact contact) {
-        getInstance().collection("contacts").document(contact.getId())
+    public static void modifyContact(String userId, final Contact contact) {
+        getUserContactsCollection(userId).document(contact.getId())
             .set(contact);
     }
 
-    public static void deleteContact(final Contact contact) {
-        getInstance().collection("contacts").document(contact.getId())
+    public static void deleteContact(String userId, final Contact contact) {
+        getUserContactsCollection(userId).document(contact.getId())
             .delete();
+    }
+
+    public static void initUser(String userId) {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+
+        DocumentReference user = getInstance().collection("users").document(userId);
+        user.set(map);
+    }
+
+    private static CollectionReference getUserContactsCollection(String userId) {
+        return getInstance().collection("users").document(userId).collection("contacts");
     }
 }

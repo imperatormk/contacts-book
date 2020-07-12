@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 
 import com.p.contactsbook.R;
 import com.p.contactsbook.entities.ContactViewModel;
+import com.p.contactsbook.services.Auth;
 import com.p.contactsbook.services.ContactsFirestore;
 import com.p.contactsbook.entities.Contact;
 import com.p.contactsbook.services.ContactsLocalDatabase;
@@ -99,8 +100,13 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                 }
             });
         } else {
-            ContactsFirestore.initContacts(cb);
+            ContactsFirestore.initContacts(auth.getAuthViewModel().getUser().getValue().getUid(), cb);
         }
+    }
+
+    Auth auth;
+    public void setAuth(Auth auth) {
+        this.auth = auth;
     }
 
     @Override
@@ -133,7 +139,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                     }
                 });
             } else {
-                ContactsFirestore.addContact(c);
+                ContactsFirestore.addContact(auth.getAuthViewModel().getUser().getValue().getUid(), c);
             }
         } else {
             if (isLocal) {
@@ -145,7 +151,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                     }
                 });
             } else {
-                ContactsFirestore.modifyContact(c);
+                ContactsFirestore.modifyContact(auth.getAuthViewModel().getUser().getValue().getUid(), c);
             }
         }
     }
@@ -174,12 +180,12 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
-                    dbInstance.deleteContact(contact);
+                ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
+                dbInstance.deleteContact(contact);
                 }
             });
         } else {
-            ContactsFirestore.deleteContact(contact);
+            ContactsFirestore.deleteContact(auth.getAuthViewModel().getUser().getValue().getUid(), contact);
         }
     }
 }

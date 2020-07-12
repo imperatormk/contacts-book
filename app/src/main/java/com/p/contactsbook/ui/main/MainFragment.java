@@ -26,6 +26,7 @@ import com.p.contactsbook.MainActivity;
 import com.p.contactsbook.R;
 import com.p.contactsbook.entities.Contact;
 import com.p.contactsbook.services.Auth;
+import com.p.contactsbook.services.ContactsFirestore;
 import com.p.contactsbook.ui.contacts.ManageContactActivity;
 import com.p.contactsbook.ui.contacts.ContactFragment;
 
@@ -98,6 +99,8 @@ public class MainFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        ((ContactFragment) getChildFragmentManager().findFragmentById(R.id.contacts)).setAuth(mAuth);
+
         mAuth.getAuthViewModel().getUser().observe(requireActivity(), new Observer<FirebaseUser>() {
             @Override
             public void onChanged(@Nullable FirebaseUser user) {
@@ -130,10 +133,7 @@ public class MainFragment extends Fragment {
 
                 boolean isNew = response.isNewUser();
                 if (isNew) {
-                    // TODO: create new document for user
-                    // TODO: transfer local data to cloud
-                } else {
-                    // TODO: purge local db?
+                    ContactsFirestore.initUser(user.getUid());
                 }
                 swLocal.setChecked(false);
             } else {
