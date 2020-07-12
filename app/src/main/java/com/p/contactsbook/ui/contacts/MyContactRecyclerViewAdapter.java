@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.p.contactsbook.R;
-import com.p.contactsbook.ui.contacts.ContactFragment.OnListFragmentInteractionListener;
 import com.p.contactsbook.entities.Contact;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +38,6 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
         Contact contact = mValues.get(position);
 
         holder.mItem = contact;
-        holder.mIdView.setText(contact.getId().substring(0, 5));
         holder.mNameView.setText(contact.getName());
         holder.mNumberView.setText(contact.getNumber());
         holder.mLocationView.setText(contact.getLocation());
@@ -52,22 +50,33 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
                 }
             }
         });
+
+        holder.mEditBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (null != mListener) {
+                    mListener.onContactEdit(holder.mItem);
+                }
+            }
+        });
     }
 
-    void updateContacts(List<Contact> contacts) {
-        mValues.clear();
-        mValues.addAll(contacts);
-        notifyDataSetChanged();
-    }
-
-    public void addContact(Contact c) {
+    void addContact(Contact c) {
         mValues.add(c);
-        notifyItemInserted(mValues.size() - 1);
+        int position = mValues.indexOf(c);
+        notifyItemInserted(position);
     }
 
-    public void deleteContact(Contact c) {
+    void modifyContact(Contact c) {
+        int position = mValues.indexOf(c);
+        mValues.set(mValues.indexOf(c), c);
+        notifyItemChanged(position);
+    }
+
+    void deleteContact(Contact c) {
+        int position = mValues.indexOf(c);
         mValues.remove(c);
-        notifyDataSetChanged();
+        notifyItemRemoved(position);
     }
 
     @Override
@@ -77,22 +86,22 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
 
     class ViewHolder extends RecyclerView.ViewHolder {
         final View mView;
-        final TextView mIdView;
         final TextView mNameView;
         final TextView mNumberView;
         final TextView mLocationView;
         final Button mDeleteBtn;
+        final Button mEditBtn;
 
         Contact mItem;
 
         ViewHolder(View view) {
             super(view);
             mView = view;
-            mIdView = view.findViewById(R.id.item_id);
             mNameView = view.findViewById(R.id.item_name);
             mNumberView = view.findViewById(R.id.item_number);
             mLocationView = view.findViewById(R.id.item_location);
             mDeleteBtn = view.findViewById(R.id.btnDelete);
+            mEditBtn = view.findViewById(R.id.btnEdit);
         }
     }
 }

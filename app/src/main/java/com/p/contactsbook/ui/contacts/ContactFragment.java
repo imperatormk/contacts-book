@@ -1,6 +1,7 @@
 package com.p.contactsbook.ui.contacts;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -13,40 +14,24 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.p.contactsbook.R;
+import com.p.contactsbook.entities.ContactViewModel;
 import com.p.contactsbook.services.Firestore;
 import com.p.contactsbook.entities.Contact;
+import com.p.contactsbook.services.LocalDatabase;
+import com.p.contactsbook.services.RoomDb;
+import com.p.contactsbook.ui.main.MainFragment;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ContactFragment extends Fragment {
+public class ContactFragment extends Fragment implements OnListFragmentInteractionListener {
+    private boolean isLocal = true;
+
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
-
-    private OnListFragmentInteractionListener mListener;
     private MyContactRecyclerViewAdapter recycler;
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
     public ContactFragment() {
-        Firestore.readContacts(new Firestore.FirestoreCallback() {
-            @Override
-            public void getContacts(List<Contact> contacts) {
-                recycler.updateContacts(contacts);
-            }
-
-            @Override
-            public void contactAdded(Contact contact) {
-                recycler.addContact(contact);
-            }
-
-            @Override
-            public void contactDeleted(Contact contact) {
-                recycler.deleteContact(contact);
-            }
-        });
     }
 
     public static ContactFragment newInstance(int columnCount) {
@@ -63,6 +48,35 @@ public class ContactFragment extends Fragment {
 
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
+        }
+
+        if (isLocal) {
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    RoomDb dbInstance = LocalDatabase.getInstance(getActivity().getApplicationContext());
+                    List<Contact> contacts = dbInstance.contactDao().getAll();
+
+                    System.out.println(contacts.size());
+                }
+            });
+        } else {
+            Firestore.readContacts(new ContactViewModel.ContactListCallback() {
+                @Override
+                public void contactAdded(Contact contact) {
+                    recycler.addContact(contact);
+                }
+
+                @Override
+                public void contactDeleted(Contact contact) {
+                    recycler.deleteContact(contact);
+                }
+
+                @Override
+                public void contactModified(Contact contact) {
+                    recycler.modifyContact(contact);
+                }
+            });
         }
     }
 
@@ -85,26 +99,31 @@ public class ContactFragment extends Fragment {
         return view;
     }
 
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (getParentFragment() instanceof OnListFragmentInteractionListener) {
-            mListener = (OnListFragmentInteractionListener) getParentFragment();
-            recycler = new MyContactRecyclerViewAdapter(new ArrayList<Contact>(), mListener);
-        } else {
-            throw new RuntimeException(getParentFragment().toString() + " must implement OnListFragmentInteractionListener");
-        }
+        recycler = new MyContactRecyclerViewAdapter(new ArrayList<Contact>(), this);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
         recycler = null;
     }
 
-    public interface OnListFragmentInteractionListener {
-        void onContactDelete(Contact item);
+    @Override
+    public void onContactEdit(Contact contact) {
+        MainFragment mainFragment = ((MainFragment) this.getParentFragment());
+        mainFragment.upsertContact(contact);
     }
+
+    @Override
+    public void onContactDelete(Contact contact) {
+        Firestore.deleteContact(contact);
+    }
+}
+
+interface OnListFragmentInteractionListener {
+    void onContactEdit(Contact contact);
+    void onContactDelete(Contact contact);
 }

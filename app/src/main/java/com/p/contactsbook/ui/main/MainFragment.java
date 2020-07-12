@@ -24,14 +24,13 @@ import com.p.contactsbook.R;
 import com.p.contactsbook.entities.Contact;
 import com.p.contactsbook.services.Firestore;
 import com.p.contactsbook.ui.contacts.AddContactActivity;
-import com.p.contactsbook.ui.contacts.ContactFragment;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
-public class MainFragment extends Fragment implements ContactFragment.OnListFragmentInteractionListener {
+public class MainFragment extends Fragment {
     private int RC_SIGN_IN = 777;
     private int RC_CREATE_CONTACT = 778;
 
@@ -61,19 +60,24 @@ public class MainFragment extends Fragment implements ContactFragment.OnListFrag
         Button btnAddContact = view.findViewById(R.id.btnAddContact);
         btnAddContact.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), AddContactActivity.class);
-                startActivityForResult(intent, RC_CREATE_CONTACT);
+                upsertContact(new Contact(null, "AAA", "BBB", "CCC"));
             }
         });
 
         return view;
     }
 
+    public void upsertContact(Contact contact) {
+        Intent intent = new Intent(getActivity(), AddContactActivity.class);
+        intent.putExtra("contact", contact);
+        startActivityForResult(intent, RC_CREATE_CONTACT);
+    }
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
+        mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         mViewModel.getUser().observe(requireActivity(), new Observer<FirebaseUser>() {
             @Override
             public void onChanged(@Nullable FirebaseUser user) {
@@ -108,11 +112,15 @@ public class MainFragment extends Fragment implements ContactFragment.OnListFrag
             Contact c = (Contact) data.getSerializableExtra("contact");
             if (c == null) return;
 
-            Firestore.addContact(c);
+            if (c.getId() == null) {
+                Firestore.addContact(c);
+            } else {
+                Firestore.modifyContact(c);
+            }
         }
     }
 
-    public void signIn() {
+    private void signIn() {
         List<AuthUI.IdpConfig> providers = Arrays.asList(
                 new AuthUI.IdpConfig.EmailBuilder().build(),
                 //new AuthUI.IdpConfig.GoogleBuilder().build(),
@@ -127,13 +135,8 @@ public class MainFragment extends Fragment implements ContactFragment.OnListFrag
                 RC_SIGN_IN);
     }
 
-    public void signOut() {
+    private void signOut() {
         FirebaseAuth.getInstance().signOut();
         mViewModel.setUser(null);
-    }
-
-    @Override
-    public void onContactDelete(Contact contact) {
-        Firestore.deleteContact(contact);
     }
 }

@@ -21,8 +21,10 @@ public class AddContactActivity extends AppCompatActivity implements View.OnClic
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_contact);
 
+        Contact contact = (Contact) getIntent().getSerializableExtra("contact");
+
         contactVm = ViewModelProviders.of(this).get(ContactViewModel.class);
-        contactVm.setContact(new Contact(null, "AAA", "BBB", "CCC"));
+        contactVm.setContact(contact);
 
         ActivityAddContactBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_add_contact);
         binding.setContactVm(contactVm);

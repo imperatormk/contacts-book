@@ -22,4 +22,10 @@ public class ContactViewModel extends ViewModel {
     public LiveData<Contact> getContact() {
         return mContact;
     }
+
+    public interface ContactListCallback {
+        void contactAdded(Contact contact);
+        void contactDeleted(Contact contact);
+        void contactModified(Contact contact);
+    }
 }
