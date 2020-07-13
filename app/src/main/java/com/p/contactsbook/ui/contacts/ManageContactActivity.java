@@ -9,6 +9,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -27,6 +29,7 @@ public class ManageContactActivity extends AppCompatActivity implements View.OnC
     private ContactViewModel contactVm;
     private SupportMapFragment mapFragment;
     private GoogleMap map;
+    private boolean editing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,12 +46,24 @@ public class ManageContactActivity extends AppCompatActivity implements View.OnC
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        editing = getIntent().getBooleanExtra("editing", false);
+
+        findViewById(R.id.lblContact).setVisibility(editing ? View.VISIBLE : View.INVISIBLE);
+        findViewById(R.id.txtName).setEnabled(editing);
+        findViewById(R.id.txtNumber).setEnabled(editing);
+        findViewById(R.id.map).setEnabled(editing);
+        findViewById(R.id.btnAddContact).setVisibility(editing ? View.VISIBLE : View.INVISIBLE);
     }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnAddContact) {
             Contact c = contactVm.getContact().getValue();
+            if (c.getName().trim().equals("") || c.getNumber().trim().equals("")) {
+                Toast.makeText(getApplicationContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             Intent data = new Intent();
             data.putExtra("contact", c);
@@ -70,8 +85,6 @@ public class ManageContactActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public void onMapClick(LatLng point) {
-        System.out.println(point.latitude);
-
         Contact c = contactVm.mContact.getValue();
         c.setGeoPoint(new GeoPoint(point.latitude, point.longitude));
 
@@ -82,7 +95,12 @@ public class ManageContactActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        map.setOnMapClickListener(this);
+        if (editing) {
+            map.setOnMapClickListener(this);
+        } else {
+            map.getUiSettings().setScrollGesturesEnabled(false);
+            map.getUiSettings().setZoomGesturesEnabled(false);
+        }
 
         GeoPoint point = contactVm.mContact.getValue().getGeoPoint();
         if (point != null) {

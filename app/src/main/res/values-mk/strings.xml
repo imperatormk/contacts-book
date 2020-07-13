@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ContactsBook</string>
+    <string name="app_name">Именик</string>
     <string name="location">Локација</string>
     <string name="submit">Поднеси</string>
     <string name="name">Име</string>

@@ -8,6 +8,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -18,12 +19,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ContactsFirestore {
+    private static ListenerRegistration registration = null;
     private static FirebaseFirestore getInstance(){
         return FirebaseFirestore.getInstance();
     };
 
     public static void initContacts(String userId, final ContactViewModel.ContactListCallback cb) {
-        getUserContactsCollection(userId)
+        if (registration != null) registration.remove();
+
+        registration = getUserContactsCollection(userId)
             .addSnapshotListener(new EventListener<QuerySnapshot>() {
                 @Override
                 public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {

@@ -54,6 +54,9 @@ public class MainFragment extends Fragment {
 
         mAuth = new Auth(this);
 
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        mAuth.getAuthViewModel().setUser(user);
+
         Button btnSignIn = view.findViewById(R.id.btnSignIn);
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -68,27 +71,28 @@ public class MainFragment extends Fragment {
         Button btnAddContact = view.findViewById(R.id.btnAddContact);
         btnAddContact.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-            launchManageContact(new Contact("", "", "", ""));
+            launchManageContact(new Contact("", "", "", ""), true);
             }
         });
 
         Button btnLanguage = view.findViewById(R.id.btnLanguage);
         btnLanguage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Locale currentLocale = getResources().getConfiguration().getLocales().get(0);
+            Locale currentLocale = getResources().getConfiguration().getLocales().get(0);
 
-                String language = currentLocale.getLanguage() == "mk" ? "en" : "mk";
-                String country = currentLocale.getCountry() == "MK" ? "US" : "MK";
-                ((MainActivity) getActivity()).updateResourcesLegacy(getActivity(), language, country);
+            String language = currentLocale.getLanguage() == "mk" ? "en" : "mk";
+            String country = currentLocale.getCountry() == "MK" ? "US" : "MK";
+            ((MainActivity) getActivity()).updateResourcesLegacy(getActivity(), language, country);
             }
         });
 
         return view;
     }
 
-    public void launchManageContact(Contact contact) {
+    public void launchManageContact(Contact contact, boolean editing) {
         Intent intent = new Intent(getActivity(), ManageContactActivity.class);
         intent.putExtra("contact", contact);
+        intent.putExtra("editing", editing);
         startActivityForResult(intent, RC_CREATE_CONTACT);
     }
 
@@ -130,8 +134,6 @@ public class MainFragment extends Fragment {
                 if (isNew) {
                     ContactsFirestore.initUser(user.getUid());
                 }
-            } else {
-                System.out.println(response.getError().getMessage());
             }
         } else if (requestCode == RC_CREATE_CONTACT) {
             if (data == null) return;

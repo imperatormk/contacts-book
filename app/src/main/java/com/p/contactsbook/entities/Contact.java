@@ -14,7 +14,6 @@ import java.io.Serializable;
 class LocationConverter {
     @TypeConverter
     public static GeoPoint toGeoPoint(String location) {
-        System.out.println("LOC! " + location);
         try {
             String lat = location.split(" : ")[0];
             String lon = location.split(" : ")[1];

@@ -32,9 +32,7 @@ public class ContactsLocalDatabase {
     }
 
     public static ContactsLocalDatabase getInstance(Context ctx, ContactViewModel.ContactListCallback cb) {
-        if (INSTANCE == null) {
-            INSTANCE = new ContactsLocalDatabase(ctx, cb);
-        }
+        INSTANCE = new ContactsLocalDatabase(ctx, cb);
         return INSTANCE;
     }
 

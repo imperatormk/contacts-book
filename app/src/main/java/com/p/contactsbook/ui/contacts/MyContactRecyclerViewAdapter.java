@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.p.contactsbook.R;
@@ -41,12 +42,19 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
         holder.mNameView.setText(contact.getName());
         holder.mNumberView.setText(contact.getNumber());
 
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.onContactBrowse(holder.mItem);
+            }
+        });
+
         holder.mDeleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (null != mListener) {
-                    mListener.onContactDelete(holder.mItem);
-                }
+            if (null != mListener) {
+                mListener.onContactDelete(holder.mItem);
+            }
             }
         });
 
@@ -56,6 +64,15 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
                 if (null != mListener) {
                     mListener.onContactEdit(holder.mItem);
                 }
+            }
+        });
+
+        holder.mNumberView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            if (null != mListener) {
+                mListener.onContactCall(holder.mItem);
+            }
             }
         });
     }
@@ -92,8 +109,8 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
         final View mView;
         final TextView mNameView;
         final TextView mNumberView;
-        final Button mDeleteBtn;
-        final Button mEditBtn;
+        final ImageButton mDeleteBtn;
+        final ImageButton mEditBtn;
 
         Contact mItem;
 

@@ -1,6 +1,8 @@
 package com.p.contactsbook.ui.contacts;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -20,6 +22,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseUser;
 import com.p.contactsbook.R;
 import com.p.contactsbook.entities.ContactViewModel;
@@ -30,10 +33,12 @@ import com.p.contactsbook.services.ContactsLocalDatabase;
 import com.p.contactsbook.ui.main.MainFragment;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class ContactFragment extends Fragment implements OnListFragmentInteractionListener {
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
+    private RecyclerView recyclerView;
     private MyContactRecyclerViewAdapter recycler;
 
     public ContactFragment() {
@@ -109,7 +114,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
         }
     }
 
-    Auth auth;
+    private Auth auth = null;
     public void setAuth(Auth auth) {
         this.auth = auth;
         this.auth.getAuthViewModel().getUser().observe(requireActivity(), new Observer<FirebaseUser>() {
@@ -120,14 +125,15 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
         });
     }
 
+    private String i;
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contact_list, container, false);
+        recycler = new MyContactRecyclerViewAdapter(new ArrayList<Contact>(), this);
 
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
+            recyclerView = (RecyclerView) view;
             if (mColumnCount <= 1) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
             } else {
@@ -136,12 +142,28 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
             recyclerView.setAdapter(recycler);
         }
 
+        i = UUID.randomUUID().toString();
+
         return view;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        recyclerView.setAdapter(null);
+        recycler = null;
+        recyclerView = null;
+    }
+
     public void upsertContact(final Contact c) {
+        boolean isLocal = !auth.getAuthViewModel().isLoggedIn();
         if (c.getId().equals("")) {
-            if (!auth.getAuthViewModel().isLoggedIn()) {
+            Bundle bundle = new Bundle();
+            bundle.putString(FirebaseAnalytics.Param.ITEM_ID, UUID.randomUUID().toString());
+            bundle.putString("contact_variant", isLocal ? "local" : "cloud");
+            FirebaseAnalytics.getInstance(getContext()).logEvent("new_contact", bundle);
+
+            if (isLocal) {
                 final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
                 AsyncTask.execute(new Runnable() {
                     @Override
@@ -153,7 +175,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                 ContactsFirestore.addContact(auth.getAuthViewModel().getUser().getValue().getUid(), c);
             }
         } else {
-            if (!auth.getAuthViewModel().isLoggedIn()) {
+            if (isLocal) {
                 final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
                 AsyncTask.execute(new Runnable() {
                     @Override
@@ -168,21 +190,15 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        recycler = new MyContactRecyclerViewAdapter(new ArrayList<Contact>(), this);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        recycler = null;
+    public void onContactBrowse(Contact contact) {
+        MainFragment mainFragment = ((MainFragment) this.getParentFragment());
+        mainFragment.launchManageContact(contact, false);
     }
 
     @Override
     public void onContactEdit(Contact contact) {
         MainFragment mainFragment = ((MainFragment) this.getParentFragment());
-        mainFragment.launchManageContact(contact);
+        mainFragment.launchManageContact(contact, true);
     }
 
     @Override
@@ -199,9 +215,17 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
             ContactsFirestore.deleteContact(auth.getAuthViewModel().getUser().getValue().getUid(), contact);
         }
     }
+
+    @Override
+    public void onContactCall(Contact contact) {
+        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + contact.getNumber()));
+        startActivity(intent);
+    }
 }
 
 interface OnListFragmentInteractionListener {
+    void onContactBrowse(Contact contact);
     void onContactEdit(Contact contact);
     void onContactDelete(Contact contact);
+    void onContactCall(Contact contact);
 }
