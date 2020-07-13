@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ContactsBook</string>
+    <string name="app_name">Contacts Book</string>
     <string name="location">Location</string>
     <string name="submit">Submit</string>
     <string name="name">Name</string>
@@ -9,4 +9,8 @@
     <string name="signin">Sign in</string>
     <string name="signout">Sign out</string>
     <string name="greeting">Welcome %1$s</string>
+    <string name="toggle_language">Toggle language</string>
+
+    <string name="facebook_application_id" translatable="false">267605424540604</string>
+    <string name="facebook_login_protocol_scheme" translatable="false">fb267605424540604</string>
 </resources>

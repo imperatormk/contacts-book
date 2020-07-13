@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:weightSum="5">
+    android:weightSum="4">
 
     <TextView
         android:id="@+id/item_name"
@@ -16,14 +16,6 @@
 
     <TextView
         android:id="@+id/item_number"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"
-        android:textAppearance="?attr/textAppearanceListItem" />
-
-    <TextView
-        android:id="@+id/item_location"
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"

@@ -4,7 +4,9 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,7 +16,11 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseUser;
 import com.p.contactsbook.R;
 import com.p.contactsbook.entities.ContactViewModel;
 import com.p.contactsbook.services.Auth;
@@ -26,8 +32,6 @@ import com.p.contactsbook.ui.main.MainFragment;
 import java.util.ArrayList;
 
 public class ContactFragment extends Fragment implements OnListFragmentInteractionListener {
-    private boolean isLocal = false;
-
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
     private MyContactRecyclerViewAdapter recycler;
@@ -52,8 +56,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
         }
     }
 
-    public void initDb(boolean _isLocal) {
-        isLocal = _isLocal;
+    public void initDb() {
         recycler.clearContacts();
 
         final ContactViewModel.ContactListCallback cb = new ContactViewModel.ContactListCallback() {
@@ -91,8 +94,9 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
             }
         };
 
-        if (isLocal) {
+        if (!auth.getAuthViewModel().isLoggedIn()) {
             final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance(getActivity().getApplicationContext(), cb);
+            Toast.makeText(getContext(), "Switched to local mode", Toast.LENGTH_SHORT).show();
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -101,12 +105,19 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
             });
         } else {
             ContactsFirestore.initContacts(auth.getAuthViewModel().getUser().getValue().getUid(), cb);
+            Toast.makeText(getContext(), "Switched to cloud mode", Toast.LENGTH_SHORT).show();
         }
     }
 
     Auth auth;
     public void setAuth(Auth auth) {
         this.auth = auth;
+        this.auth.getAuthViewModel().getUser().observe(requireActivity(), new Observer<FirebaseUser>() {
+            @Override
+            public void onChanged(@Nullable FirebaseUser user) {
+            initDb();
+            }
+        });
     }
 
     @Override
@@ -130,7 +141,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
 
     public void upsertContact(final Contact c) {
         if (c.getId().equals("")) {
-            if (isLocal) {
+            if (!auth.getAuthViewModel().isLoggedIn()) {
                 final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
                 AsyncTask.execute(new Runnable() {
                     @Override
@@ -142,7 +153,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
                 ContactsFirestore.addContact(auth.getAuthViewModel().getUser().getValue().getUid(), c);
             }
         } else {
-            if (isLocal) {
+            if (!auth.getAuthViewModel().isLoggedIn()) {
                 final ContactsLocalDatabase dbInstance = ContactsLocalDatabase.getInstance();
                 AsyncTask.execute(new Runnable() {
                     @Override
@@ -176,7 +187,7 @@ public class ContactFragment extends Fragment implements OnListFragmentInteracti
 
     @Override
     public void onContactDelete(final Contact contact) {
-        if (isLocal) {
+        if (!auth.getAuthViewModel().isLoggedIn()) {
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {

@@ -9,4 +9,5 @@
     <string name="signin">Најави се</string>
     <string name="signout">Одјави се</string>
     <string name="greeting">Добредојде %1$s</string>
+    <string name="toggle_language">Смени јазик</string>
 </resources>

@@ -32,6 +32,7 @@ import com.p.contactsbook.ui.contacts.ContactFragment;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -40,7 +41,6 @@ public class MainFragment extends Fragment {
     private int RC_CREATE_CONTACT = 778;
 
     private Auth mAuth;
-    private Switch swLocal;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -57,32 +57,29 @@ public class MainFragment extends Fragment {
         Button btnSignIn = view.findViewById(R.id.btnSignIn);
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (mAuth.getAuthViewModel().isLoggedIn()) {
-                    signOut();
-                } else {
-                    signIn();
-                }
+            if (mAuth.getAuthViewModel().isLoggedIn()) {
+                signOut();
+            } else {
+                signIn();
+            }
             }
         });
 
         Button btnAddContact = view.findViewById(R.id.btnAddContact);
         btnAddContact.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                launchManageContact(new Contact("", "", "", ""));
-            }
-        });
-
-        swLocal = view.findViewById(R.id.swLocal);
-        swLocal.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                ((ContactFragment) getChildFragmentManager().findFragmentById(R.id.contacts)).initDb(isChecked);
+            launchManageContact(new Contact("", "", "", ""));
             }
         });
 
         Button btnLanguage = view.findViewById(R.id.btnLanguage);
         btnLanguage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                ((MainActivity) getActivity()).updateResourcesLegacy(getActivity(), "mk", "MK");
+                Locale currentLocale = getResources().getConfiguration().getLocales().get(0);
+
+                String language = currentLocale.getLanguage() == "mk" ? "en" : "mk";
+                String country = currentLocale.getCountry() == "MK" ? "US" : "MK";
+                ((MainActivity) getActivity()).updateResourcesLegacy(getActivity(), language, country);
             }
         });
 
@@ -114,8 +111,6 @@ public class MainFragment extends Fragment {
                     txtWelcome.setText(getResources().getString(R.string.greeting, user.getDisplayName()));
                     btnLogin.setText(R.string.signout);
                 }
-
-                swLocal.setChecked(user == null);
             }
         });
     }
@@ -135,7 +130,6 @@ public class MainFragment extends Fragment {
                 if (isNew) {
                     ContactsFirestore.initUser(user.getUid());
                 }
-                swLocal.setChecked(false);
             } else {
                 System.out.println(response.getError().getMessage());
             }
@@ -152,8 +146,8 @@ public class MainFragment extends Fragment {
     private void signIn() {
         List<AuthUI.IdpConfig> providers = Arrays.asList(
             new AuthUI.IdpConfig.EmailBuilder().build(),
-            //new AuthUI.IdpConfig.GoogleBuilder().build(),
-            //new AuthUI.IdpConfig.FacebookBuilder().build(),
+            new AuthUI.IdpConfig.GoogleBuilder().build(),
+            new AuthUI.IdpConfig.FacebookBuilder().build(),
             new AuthUI.IdpConfig.AnonymousBuilder().build());
 
         startActivityForResult(

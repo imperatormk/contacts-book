@@ -18,10 +18,11 @@
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="72dp"
+            android:layout_marginTop="24dp"
             android:text="@string/new_contact"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.477"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -29,7 +30,7 @@
             android:id="@+id/txtName"
             android:layout_width="293dp"
             android:layout_height="48dp"
-            android:layout_marginTop="56dp"
+            android:layout_marginTop="20dp"
             android:ems="10"
             android:hint="@string/name"
             android:inputType="textPersonName"
@@ -56,7 +57,11 @@
             android:layout_width="293dp"
             android:layout_height="48dp"
             android:layout_marginTop="24dp"
+            android:editable="false"
             android:ems="10"
+            android:enabled="false"
+            android:focusable="auto"
+            android:focusableInTouchMode="false"
             android:hint="@string/location"
             android:inputType="textPersonName"
             android:text="@={contactVm.mContact.location}"
@@ -64,16 +69,27 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editText2" />
 
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="378dp"
+            android:layout_height="236dp"
+            android:layout_marginTop="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.484"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editText3" />
+
         <Button
             android:id="@+id/btnAddContact"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="72dp"
-            android:text="@string/submit"
+            android:layout_marginTop="8dp"
             android:onClick="onClick"
+            android:text="@string/submit"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintHorizontal_bias="0.947"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editText3" />
+            app:layout_constraintTop_toBottomOf="@+id/map" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

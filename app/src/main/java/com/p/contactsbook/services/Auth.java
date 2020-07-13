@@ -29,7 +29,7 @@ public class Auth {
         }
 
         public boolean isLoggedIn() {
-            return mUser.getValue() != null;
+            return mUser.getValue() != null && !mUser.getValue().isAnonymous();
         }
     }
 }

@@ -12,7 +12,7 @@ import com.p.contactsbook.entities.ContactViewModel;
 
 import java.util.UUID;
 
-@Database(entities = {Contact.class}, version = 1)
+@Database(entities = {Contact.class}, version = 1, exportSchema = false)
 abstract class RoomDb extends RoomDatabase {
     public abstract ContactDao contactDao();
 }
@@ -40,7 +40,6 @@ public class ContactsLocalDatabase {
 
     public void initContacts() {
         for (Contact c : INSTANCE.db.contactDao().getAll()) {
-            System.out.println("INIT ID IS: " + c.getId());
             cb.contactAdded(c);
         }
     }

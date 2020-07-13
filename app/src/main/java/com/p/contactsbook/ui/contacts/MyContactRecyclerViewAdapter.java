@@ -40,7 +40,6 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
         holder.mItem = contact;
         holder.mNameView.setText(contact.getName());
         holder.mNumberView.setText(contact.getNumber());
-        holder.mLocationView.setText(contact.getLocation());
 
         holder.mDeleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,7 +92,6 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
         final View mView;
         final TextView mNameView;
         final TextView mNumberView;
-        final TextView mLocationView;
         final Button mDeleteBtn;
         final Button mEditBtn;
 
@@ -104,7 +102,6 @@ public class MyContactRecyclerViewAdapter extends RecyclerView.Adapter<MyContact
             mView = view;
             mNameView = view.findViewById(R.id.item_name);
             mNumberView = view.findViewById(R.id.item_number);
-            mLocationView = view.findViewById(R.id.item_location);
             mDeleteBtn = view.findViewById(R.id.btnDelete);
             mEditBtn = view.findViewById(R.id.btnEdit);
         }
